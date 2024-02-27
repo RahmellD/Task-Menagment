@@ -8,7 +8,11 @@ const createTask = async (req, res) => {
             data: {
                 task_name,
                 description,
-                user_id
+                statuses: {
+                    create: {
+                        status: 'TO_DO'
+                    }
+                }
             }
         })
         res.json(createTask);
@@ -66,4 +70,36 @@ const deleteTask = async (req, res) => {
     }
 }
 
-module.exports = { createTask, getTasks, updateTask, deleteTask };
+const addTaskToUser = async (req, res) => {
+    try {
+        const { userId, taskId } = req.body;
+
+        const user = await prisma.user.findUnique({
+            where: {
+                id: userId
+
+            },
+        });
+
+        const task = await prisma.task.findUnique({
+            where: { id: taskId },
+        });
+
+        if (!user || !task) {
+            return res.status(404).json('User or task not found');
+        }
+
+        await prisma.task.update({
+            where: { id: taskId },
+            data: { user: { connect: { id: userId } } },
+        });
+
+        res.status(200).json('Task assigned to user successfully');
+    } catch (error) {
+        console.error('Error assigning task:', error);
+        res.status(500).json('Internal server error');
+    }
+};
+
+
+module.exports = { createTask, getTasks, updateTask, deleteTask, addTaskToUser };

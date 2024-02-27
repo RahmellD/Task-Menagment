@@ -26,7 +26,7 @@ model Task {
   task_name   String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  user        User?    @relation(fields: [user_id], references: [id])
+  user        User[]
   statuses    Satus[]
 }
 
@@ -39,7 +39,7 @@ enum Status {
 
 model Satus {
   id         Int      @id @default(autoincrement())
-  status     Status
+  status     Status   @default(TO_DO)
   task_id    Int
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

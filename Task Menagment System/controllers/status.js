@@ -1,36 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-const assignTaskToUser = async (req, res) => {
-    try {
-        const { userId, taskId } = req.body;
-
-        const user = await prisma.user.findUnique({
-            where: {
-                id: userId
-
-            },
-        });
-
-        const task = await prisma.task.findUnique({
-            where: { id: taskId },
-        });
-
-        if (!user || !task) {
-            return res.status(404).json('User or task not found');
-        }
-
-        await prisma.task.update({
-            where: { id: taskId },
-            data: { user: { connect: { id: userId } } },
-        });
-
-        res.status(200).json('Task assigned to user successfully');
-    } catch (error) {
-        console.error('Error assigning task:', error);
-        res.status(500).json('Internal server error');
-    }
-};
 
 const getTaskByUser = async (req, res) => {
     try {
@@ -56,7 +26,7 @@ const getTaskByUser = async (req, res) => {
 const updateTaskStatus = async (req, res) => {
     try {
         const taskId = parseInt(req.params.id);
-        const { newStatus } = req.body;
+        const { status } = req.body;
 
         const existingTask = await prisma.task.findUnique({
             where: { id: taskId },
@@ -66,14 +36,10 @@ const updateTaskStatus = async (req, res) => {
             return res.status(404).json('Task not found');
         }
 
-        await prisma.task.update({
+        await prisma.satus.update({
             where: { id: taskId },
             data: {
-                statuses: {
-                    create: {
-                        status: newStatus,
-                    },
-                },
+                status
             },
         });
 
@@ -95,6 +61,14 @@ const getTasksByStatus = async (req, res) => {
                     },
                 },
             },
+            include: {
+                user: {
+                    select: {
+                        name: true
+                    }
+
+                }
+            }
         });
 
         if (!tasksWithStatus || tasksWithStatus.length === 0) {
@@ -109,4 +83,4 @@ const getTasksByStatus = async (req, res) => {
 };
 
 
-module.exports = { assignTaskToUser, updateTaskStatus, getTaskByUser, getTasksByStatus }
+module.exports = { updateTaskStatus, getTaskByUser, getTasksByStatus }
